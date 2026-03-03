@@ -1,0 +1,215 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<title>MSF Elayadam Unit</title>
+
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+    background:linear-gradient(to right,#0b3d91,#1e90ff);
+    color:white;
+}
+
+.box{
+    background:white;
+    color:black;
+    width:400px;
+    margin:20px auto;
+    padding:20px;
+    border-radius:10px;
+}
+
+input,button{
+    padding:8px;
+    margin:5px;
+    width:90%;
+}
+
+button{cursor:pointer;}
+
+.present{color:green;font-weight:bold;}
+.absent{color:red;}
+.rejected{color:orange;}
+</style>
+
+<script>
+
+// Members List
+var members = [
+{name:"Muhammed Rifad",mobile:"1111"},
+{name:"Member 2",mobile:"2222"},
+{name:"Member 3",mobile:"3333"},
+{name:"Member 4",mobile:"4444"},
+{name:"Member 5",mobile:"5555"},
+{name:"Member 6",mobile:"6666"},
+{name:"Member 7",mobile:"7777"},
+{name:"Member 8",mobile:"8888"},
+{name:"Member 9",mobile:"9999"},
+{name:"Member 10",mobile:"1010"},
+{name:"Member 11",mobile:"1112"},
+{name:"Member 12",mobile:"1212"},
+{name:"Member 13",mobile:"1313"},
+{name:"Member 14",mobile:"1414"}
+];
+
+var meetingActive = false;
+var meetingDate = "";
+var pendingRequests = [];
+var accepted = [];
+var rejected = [];
+
+// ADMIN LOGIN
+function adminLogin(){
+var user=document.getElementById("adminUser").value;
+var pass=document.getElementById("adminPass").value;
+
+if(user==="admin" && pass==="1234"){
+document.getElementById("adminLoginBox").style.display="none";
+document.getElementById("adminPanel").style.display="block";
+}else{
+alert("Invalid Admin Login");
+}
+}
+
+// CREATE MEETING
+function createMeeting(){
+meetingDate=document.getElementById("meetingDate").value;
+
+if(meetingDate===""){
+alert("Select date");
+return;
+}
+
+meetingActive=true;
+accepted=[];
+rejected=[];
+pendingRequests=[];
+
+alert("Meeting Created for "+meetingDate+" ✅");
+document.getElementById("meetingInfo").innerHTML=
+"Active Meeting: "+meetingDate;
+}
+
+// CLOSE MEETING
+function closeMeeting(){
+meetingActive=false;
+alert("Meeting Closed ✅");
+}
+
+// MEMBER LOGIN & REQUEST
+function memberSubmit(){
+var name=document.getElementById("memberName").value.trim();
+var mobile=document.getElementById("memberMobile").value.trim();
+
+var found=members.find(m=>m.name===name && m.mobile===mobile);
+
+if(!meetingActive){
+alert("No Active Meeting ❌");
+return;
+}
+
+if(found){
+pendingRequests.push(name);
+alert("Request Sent to Admin");
+}else{
+alert("Invalid Details");
+}
+}
+
+// LOAD PENDING
+function loadPending(){
+var list=document.getElementById("pendingList");
+list.innerHTML="";
+
+pendingRequests.forEach(function(name,index){
+list.innerHTML+= name+
+" <button onclick='accept("+index+")'>Accept</button>"+
+" <button onclick='reject("+index+")'>Reject</button><br><br>";
+});
+}
+
+// ACCEPT
+function accept(index){
+var name=pendingRequests[index];
+accepted.push(name);
+pendingRequests.splice(index,1);
+loadPending();
+showStatus();
+}
+
+// REJECT
+function reject(index){
+var name=pendingRequests[index];
+rejected.push(name);
+pendingRequests.splice(index,1);
+loadPending();
+showStatus();
+}
+
+// SHOW ATTENDANCE
+function showStatus(){
+var result=document.getElementById("attendanceResult");
+result.innerHTML="<h3>Meeting Conclusion</h3>";
+
+members.forEach(function(member){
+
+if(accepted.includes(member.name)){
+result.innerHTML+=member.name+
+" - <span class='present'>Present</span><br>";
+}
+else if(rejected.includes(member.name)){
+result.innerHTML+=member.name+
+" - <span class='rejected'>Rejected</span><br>";
+}
+else{
+result.innerHTML+=member.name+
+" - <span class='absent'>Absent</span><br>";
+}
+
+});
+}
+
+</script>
+</head>
+
+<body>
+
+<h1>MSF Elayadam Unit</h1>
+
+<!-- ADMIN LOGIN -->
+<div class="box" id="adminLoginBox">
+<h2>Admin Login</h2>
+<input type="text" id="adminUser" placeholder="Username"><br>
+<input type="password" id="adminPass" placeholder="Password"><br>
+<button onclick="adminLogin()">Login</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="box" id="adminPanel" style="display:none;">
+<h2>Admin Panel</h2>
+
+<input type="date" id="meetingDate"><br>
+<button onclick="createMeeting()">Create Meeting</button>
+<button onclick="closeMeeting()">Close Meeting</button>
+
+<p id="meetingInfo"></p>
+
+<h3>Pending Requests</h3>
+<button onclick="loadPending()">Refresh</button>
+<div id="pendingList"></div>
+
+<button onclick="showStatus()">Show Meeting Conclusion</button>
+<div id="attendanceResult"></div>
+</div>
+
+<!-- MEMBER SECTION -->
+<div class="box">
+<h2>Member Attendance</h2>
+<input type="text" id="memberName" placeholder="Full Name"><br>
+<input type="text" id="memberMobile" placeholder="Mobile Number"><br>
+<button onclick="memberSubmit()">Submit Attendance</button>
+</div>
+
+</body>
+</html>

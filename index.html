@@ -13,205 +13,237 @@ color:white;
 .box{
 background:white;
 color:black;
-width:420px;
+width:520px;
 margin:20px auto;
 padding:20px;
 border-radius:10px;
 }
-input,button{
+button,input{
 padding:8px;
 margin:5px;
 width:90%;
 }
-.present{color:green;font-weight:bold;}
-.rejected{color:orange;font-weight:bold;}
-.absent{color:red;font-weight:bold;}
+button{cursor:pointer;}
+.hidden{display:none;}
+
+.pending{color:orange;font-weight:bold;}
+.approved{color:green;font-weight:bold;}
+.rejected{color:red;font-weight:bold;}
+.absent{color:red;}
+.running{color:green;font-weight:bold;}
 </style>
 
 <script>
 
-var members = [
+var members=[
 {name:"Muhammed Rifad",mobile:"7511105796"},
-{name:"Absham Nousik",mobile:"6282859094"},
-{name:"Muhammed Sinan",mobile:"9605105354"},
-{name:"Muhammed Jinan",mobile:"8590684348"},
-{name:"Member 5",mobile:"5555"},
-{name:"Member 6",mobile:"6666"},
-{name:"Member 7",mobile:"7777"},
-{name:"Member 8",mobile:"8888"},
-{name:"Member 9",mobile:"9999"},
-{name:"Member 10",mobile:"1010"},
-{name:"Member 11",mobile:"1112"},
-{name:"Member 12",mobile:"1212"},
-{name:"Member 13",mobile:"1313"},
-{name:"Member 14",mobile:"1414"}
+{name:"Muhammed Sinan",mobile:"9605105354"}
 ];
 
-var meetingActive = JSON.parse(localStorage.getItem("meetingActive")) || false;
-var meetingDate = localStorage.getItem("meetingDate") || "";
-var attendanceStatus = JSON.parse(localStorage.getItem("attendanceStatus")) || {};
-var pendingRequests = JSON.parse(localStorage.getItem("pendingRequests")) || [];
-var currentMember = "";
+var meetings = JSON.parse(localStorage.getItem("meetings")) || [];
 
-function saveData(){
-localStorage.setItem("meetingActive", JSON.stringify(meetingActive));
-localStorage.setItem("meetingDate", meetingDate);
-localStorage.setItem("attendanceStatus", JSON.stringify(attendanceStatus));
-localStorage.setItem("pendingRequests", JSON.stringify(pendingRequests));
+function save(){
+localStorage.setItem("meetings",JSON.stringify(meetings));
 }
 
-// ADMIN LOGIN
-function adminLogin(){
-var user=document.getElementById("adminUser").value;
-var pass=document.getElementById("adminPass").value;
+function hideAll(){
+document.querySelectorAll(".box").forEach(b=>b.style.display="none");
+}
 
-if(user==="sinan" && pass==="4360"){
-document.getElementById("adminLoginBox").style.display="none";
-document.getElementById("adminPanel").style.display="block";
-document.getElementById("meetingInfo").innerHTML="Active Meeting: "+meetingDate;
-loadPending();
-showFullStatus();
+function showHome(){ hideAll(); home.style.display="block"; }
+function showAdminLogin(){ hideAll(); adminLoginBox.style.display="block"; }
+function showMemberLogin(){ hideAll(); memberLoginBox.style.display="block"; }
+
+/* ---------------- ADMIN ---------------- */
+
+function adminLogin(){
+if(adminUser.value==="sinan" && adminPass.value==="4360"){
+hideAll();
+adminDashboard.style.display="block";
+loadAdminDashboard();
 }else{
 alert("Wrong Login");
 }
 }
 
-// CREATE MEETING
+function loadAdminDashboard(){
+adminDashContent.innerHTML=
+"<button onclick='createMeeting()'>Create New Meeting</button>"+
+"<hr><h3>Meeting History</h3>";
+
+meetings.filter(m=>!m.active).forEach(m=>{
+adminDashContent.innerHTML+=
+"<p><b>Start:</b> "+m.startTime+
+"<br><b>End:</b> "+m.endTime+
+"<br>"+m.attendance.map(a=>
+a.name+" - <span class='"+a.status.toLowerCase()+"'>"+
+a.status+"</span>"
+).join("<br>")+
+"</p><hr>";
+});
+}
+
 function createMeeting(){
-meetingDate=document.getElementById("meetingDate").value;
-if(meetingDate===""){ alert("Select date"); return; }
 
-meetingActive=true;
-attendanceStatus={};
-pendingRequests=[];
-saveData();
-
-document.getElementById("meetingInfo").innerHTML="Active Meeting: "+meetingDate;
-alert("Meeting Created ✅");
-}
-
-// CLOSE MEETING
-function closeMeeting(){
-meetingActive=false;
-saveData();
-alert("Meeting Closed ✅");
-}
-
-// MEMBER LOGIN
-function memberLogin(){
-
-var name=document.getElementById("memberName").value.trim();
-var mobile=document.getElementById("memberMobile").value.trim();
-
-var found = members.find(function(m){
-return m.name.toLowerCase() === name.toLowerCase()
-       && m.mobile === mobile;
-});
-
-if(!found){
-alert("Invalid Details");
+if(meetings.find(m=>m.active)){
+alert("Meeting Already Running");
 return;
 }
 
-currentMember = found.name;
-document.getElementById("memberArea").style.display="block";
+meetings.push({
+startTime:new Date().toLocaleString(),
+endTime:null,
+active:true,
+attendance:[]
+});
 
-if(!meetingActive){
-document.getElementById("memberStatus").innerHTML =
-"<span class='rejected'>No Active Meeting Today</span>";
-document.getElementById("submitBtn").style.display="none";
-return;
-}
-
-checkMemberStatus();
-}
-
-// CHECK STATUS INSIDE LOGIN
-function checkMemberStatus(){
-
-var status = attendanceStatus[currentMember];
-
-if(status=="Present"){
-document.getElementById("memberStatus").innerHTML =
-"<span class='present'>You are Present</span>";
-document.getElementById("submitBtn").style.display="none";
-}
-else if(status=="Rejected"){
-document.getElementById("memberStatus").innerHTML =
-"<span class='rejected'>Your Request Rejected</span>";
-document.getElementById("submitBtn").style.display="none";
-}
-else if(pendingRequests.includes(currentMember)){
-document.getElementById("memberStatus").innerHTML =
-"<span class='absent'>Waiting for Admin Approval</span>";
-document.getElementById("submitBtn").style.display="none";
-}
-else{
-document.getElementById("memberStatus").innerHTML =
-"<span class='absent'>Not Submitted</span>";
-document.getElementById("submitBtn").style.display="block";
-}
+save();
+hideAll();
+adminMeetingPage.style.display="block";
+loadAdminMeetingPage();
 }
 
-// SUBMIT ATTENDANCE
-function submitAttendance(){
-if(!pendingRequests.includes(currentMember)){
-pendingRequests.push(currentMember);
-saveData();
-alert("Attendance Sent to Admin ✅");
-}
-checkMemberStatus();
-}
+function loadAdminMeetingPage(){
 
-// ADMIN PENDING LIST
-function loadPending(){
-var list=document.getElementById("pendingList");
-list.innerHTML="";
+var m=meetings.find(m=>m.active);
+if(!m){ showHome(); return; }
 
-pendingRequests.forEach(function(name,index){
-list.innerHTML+= name+
-" <button onclick='accept("+index+")'>Accept</button>"+
-" <button onclick='reject("+index+")'>Reject</button><br><br>";
+adminMeetingContent.innerHTML=
+"<p class='running'>Meeting Running</p>"+
+"<p>Start Time: "+m.startTime+"</p>"+
+"<button onclick='closeMeeting()'>Close Meeting</button>"+
+"<hr><h3>Pending Attendance</h3>";
+
+m.attendance.forEach((a,i)=>{
+if(a.status==="Pending"){
+adminMeetingContent.innerHTML+=
+a.name+" - "+a.submitTime+
+"<br><button onclick='approve("+i+")'>Approve</button>"+
+"<button onclick='reject("+i+")'>Reject</button><hr>";
+}
+});
+
+adminMeetingContent.innerHTML+="<h3>Approved / Rejected</h3>";
+
+m.attendance.forEach(a=>{
+if(a.status!=="Pending"){
+adminMeetingContent.innerHTML+=
+a.name+" - <span class='"+a.status.toLowerCase()+"'>"+
+a.status+"</span><hr>";
+}
 });
 }
 
-// ACCEPT
-function accept(index){
-var name=pendingRequests[index];
-attendanceStatus[name]="Present";
-pendingRequests.splice(index,1);
-saveData();
-loadPending();
-showFullStatus();
+function approve(index){
+var m=meetings.find(m=>m.active);
+m.attendance[index].status="Approved";
+m.attendance[index].actionTime=new Date().toLocaleString();
+save();
+loadAdminMeetingPage();
 }
 
-// REJECT
 function reject(index){
-var name=pendingRequests[index];
-attendanceStatus[name]="Rejected";
-pendingRequests.splice(index,1);
-saveData();
-loadPending();
-showFullStatus();
+var m=meetings.find(m=>m.active);
+m.attendance[index].status="Rejected";
+m.attendance[index].actionTime=new Date().toLocaleString();
+save();
+loadAdminMeetingPage();
 }
 
-// ADMIN STATUS VIEW
-function showFullStatus(){
-var result=document.getElementById("adminStatus");
-result.innerHTML="<h3>Attendance Status</h3>";
+function closeMeeting(){
+var m=meetings.find(m=>m.active);
+if(!m){ return; }
 
-members.forEach(function(member){
-if(attendanceStatus[member.name]=="Present"){
-result.innerHTML+=member.name+" - <span class='present'>Present</span><br>";
-}
-else if(attendanceStatus[member.name]=="Rejected"){
-result.innerHTML+=member.name+" - <span class='rejected'>Rejected</span><br>";
-}
-else{
-result.innerHTML+=member.name+" - <span class='absent'>Absent</span><br>";
-}
+members.forEach(mem=>{
+if(!m.attendance.find(a=>a.name===mem.name)){
+m.attendance.push({
+name:mem.name,
+status:"Absent",
+submitTime:"-",
+actionTime:"-"
 });
 }
+});
+
+m.active=false;
+m.endTime=new Date().toLocaleString();
+save();
+
+alert("Meeting Closed");
+hideAll();
+adminDashboard.style.display="block";
+loadAdminDashboard();
+}
+
+/* ---------------- MEMBER ---------------- */
+
+var currentMember="";
+
+function memberLogin(){
+var found=members.find(m=>
+m.name.toLowerCase()===memberName.value.toLowerCase() &&
+m.mobile===memberMobile.value
+);
+
+if(!found){ alert("Invalid Details"); return; }
+
+currentMember=found.name;
+hideAll();
+memberPanel.style.display="block";
+loadMemberPanel();
+}
+
+function loadMemberPanel(){
+var m=meetings.find(m=>m.active);
+
+memberContent.innerHTML="";
+
+if(m){
+memberContent.innerHTML=
+"<p class='running'>Meeting Running</p>"+
+"<p>Start Time: "+m.startTime+"</p>"+
+"<button onclick='submitAttendance()'>Submit Attendance</button>";
+}
+else{
+memberContent.innerHTML="<p>No Active Meeting</p>";
+}
+
+memberContent.innerHTML+="<hr><h3>Your History</h3>";
+
+meetings.filter(x=>!x.active).forEach(meet=>{
+var record=meet.attendance.find(a=>a.name===currentMember);
+memberContent.innerHTML+=
+"<p><b>"+meet.startTime+"</b>"+
+"<br>Status: "+
+(record?
+"<span class='"+record.status.toLowerCase()+"'>"+record.status+"</span>"
+:"Absent")+
+"</p><hr>";
+});
+}
+
+function submitAttendance(){
+var m=meetings.find(m=>m.active);
+if(!m){ alert("No Active Meeting"); return; }
+
+if(m.attendance.find(a=>a.name===currentMember)){
+alert("Already Submitted");
+return;
+}
+
+m.attendance.push({
+name:currentMember,
+status:"Pending",
+submitTime:new Date().toLocaleString(),
+actionTime:"-"
+});
+
+save();
+alert("Submitted (Pending Approval)");
+loadMemberPanel();
+}
+
+window.onload=showHome;
 
 </script>
 </head>
@@ -220,43 +252,43 @@ result.innerHTML+=member.name+" - <span class='absent'>Absent</span><br>";
 
 <h1>MSF Elayadam Unit</h1>
 
-<!-- ADMIN LOGIN -->
-<div class="box" id="adminLoginBox">
+<div class="box" id="home">
+<button onclick="showAdminLogin()">Admin Login</button>
+<button onclick="showMemberLogin()">Member Login</button>
+</div>
+
+<div class="box hidden" id="adminLoginBox">
 <h2>Admin Login</h2>
-<input type="text" id="adminUser" placeholder="Username"><br>
-<input type="password" id="adminPass" placeholder="Password"><br>
+<input id="adminUser" placeholder="Username">
+<input type="password" id="adminPass" placeholder="Password">
 <button onclick="adminLogin()">Login</button>
+<button onclick="showHome()">Back</button>
 </div>
 
-<!-- ADMIN PANEL -->
-<div class="box" id="adminPanel" style="display:none;">
-<h2>Admin Panel</h2>
-
-<input type="date" id="meetingDate"><br>
-<button onclick="createMeeting()">Create Meeting</button>
-<button onclick="closeMeeting()">Close Meeting</button>
-
-<p id="meetingInfo"></p>
-
-<h3>Pending Requests</h3>
-<div id="pendingList"></div>
-
-<div id="adminStatus"></div>
+<div class="box hidden" id="adminDashboard">
+<h2>Admin Dashboard</h2>
+<div id="adminDashContent"></div>
+<button onclick="showHome()">Logout</button>
 </div>
 
-<!-- MEMBER LOGIN -->
-<div class="box">
+<div class="box hidden" id="adminMeetingPage">
+<h2>Active Meeting</h2>
+<div id="adminMeetingContent"></div>
+<button onclick="showHome()">Exit</button>
+</div>
+
+<div class="box hidden" id="memberLoginBox">
 <h2>Member Login</h2>
-<input type="text" id="memberName" placeholder="Full Name"><br>
-<input type="text" id="memberMobile" placeholder="Mobile Number"><br>
+<input id="memberName" placeholder="Full Name">
+<input id="memberMobile" placeholder="Mobile">
 <button onclick="memberLogin()">Login</button>
-
-<div id="memberArea" style="display:none;">
-<h3>Status</h3>
-<div id="memberStatus"></div>
-<button id="submitBtn" onclick="submitAttendance()" style="display:none;">Submit Attendance</button>
+<button onclick="showHome()">Back</button>
 </div>
 
+<div class="box hidden" id="memberPanel">
+<h2>Member Panel</h2>
+<div id="memberContent"></div>
+<button onclick="showHome()">Logout</button>
 </div>
 
 </body>

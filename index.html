@@ -10,7 +10,6 @@ text-align:center;
 background:linear-gradient(to right,#0b3d91,#1e90ff);
 color:white;
 }
-
 .box{
 background:white;
 color:black;
@@ -19,13 +18,11 @@ margin:20px auto;
 padding:20px;
 border-radius:10px;
 }
-
 input,button{
 padding:8px;
 margin:5px;
 width:90%;
 }
-
 .present{color:green;font-weight:bold;}
 .rejected{color:orange;font-weight:bold;}
 .absent{color:red;font-weight:bold;}
@@ -37,7 +34,7 @@ var members = [
 {name:"Muhammed Rifad",mobile:"7511105796"},
 {name:"Absham Nousik",mobile:"6282859094"},
 {name:"Muhammed Sinan",mobile:"9605105354"},
-{name:"Member 4",mobile:"4444"},
+{name:"Muhammed Jinan",mobile:"8590684348"},
 {name:"Member 5",mobile:"5555"},
 {name:"Member 6",mobile:"6666"},
 {name:"Member 7",mobile:"7777"},
@@ -117,18 +114,19 @@ return;
 }
 
 currentMember = found.name;
+document.getElementById("memberArea").style.display="block";
 
 if(!meetingActive){
-alert("No Active Meeting");
+document.getElementById("memberStatus").innerHTML =
+"<span class='rejected'>No Active Meeting Today</span>";
+document.getElementById("submitBtn").style.display="none";
 return;
 }
-
-document.getElementById("memberArea").style.display="block";
 
 checkMemberStatus();
 }
 
-// CHECK MEMBER STATUS INSIDE LOGIN
+// CHECK STATUS INSIDE LOGIN
 function checkMemberStatus(){
 
 var status = attendanceStatus[currentMember];
@@ -157,17 +155,15 @@ document.getElementById("submitBtn").style.display="block";
 
 // SUBMIT ATTENDANCE
 function submitAttendance(){
-
 if(!pendingRequests.includes(currentMember)){
 pendingRequests.push(currentMember);
 saveData();
 alert("Attendance Sent to Admin ✅");
 }
-
 checkMemberStatus();
 }
 
-// ADMIN PENDING
+// ADMIN PENDING LIST
 function loadPending(){
 var list=document.getElementById("pendingList");
 list.innerHTML="";
@@ -199,7 +195,7 @@ loadPending();
 showFullStatus();
 }
 
-// ADMIN STATUS
+// ADMIN STATUS VIEW
 function showFullStatus(){
 var result=document.getElementById("adminStatus");
 result.innerHTML="<h3>Attendance Status</h3>";
